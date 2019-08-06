@@ -44,9 +44,9 @@ def post_processor(f, s3uri):
     json_file = json_extract(f)
     upload(json_file, s3uri)
     # Clean up
-    logger.info("Uploaded to s3 and deleted local copy..{}".format(json_file))
+    #logger.info("Uploaded to s3 and deleted local copy..{}".format(json_file))
     os.remove(f)
-    os.remove(json_file)
+    #os.remove(json_file)
 
 
 def json_extract(f):
