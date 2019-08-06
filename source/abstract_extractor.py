@@ -19,15 +19,14 @@ class AbstractExtractor:
     def __call__(self, xml_handle):
         result = []
         for ele_article in self._iter_elements_by_name(xml_handle, "PubmedArticle", self.namespaces):
-            title = ele_article.find("MedlineCitation/Article/ArticleTitle").text
+            title = self._get_text(ele_article, "MedlineCitation/Article/ArticleTitle", "")
             id = ele_article.find("MedlineCitation/PMID").text
 
             # Some articles don't seem to have abstract
             # e.g pubmed id 15267574
-            abstract = self._get_text(ele_article, "MedlineCitation/Article/Abstract/AbstractText", None)
-            if abstract is None:
+            abstract = self._get_text(ele_article, "MedlineCitation/Article/Abstract/AbstractText", "")
+            if len(abstract) == 0:
                 continue
-
             # Day is optional
             year = self._get_text(ele_article, "MedlineCitation/Article/Journal/JournalIssue/PubDate/Year", None)
             month = self._get_text(ele_article, "MedlineCitation/Article/Journal/JournalIssue/PubDate/Month", None)
@@ -45,10 +44,17 @@ class AbstractExtractor:
         return result
 
     def _get_text(self, element, path, default_val):
-        ele = element.find(path)
+        ele = element.findall(path)
         val = default_val
-        if ele is not None:
-            val = ele.text
+        if not ele:
+            return val
+        val = ""
+        for e in ele:
+            if e.text is not None:
+                val += e.text
+            for ee in e:
+                val += ElementTree.tostring(ee, encoding="unicode")
+            val += " "
         return val
 
     def dump(self, xml_handle, out_handle):
@@ -56,7 +62,7 @@ class AbstractExtractor:
         out_handle.write(json.dumps(result))
 
     def dump_to_file(self, xml_handle, file_path):
-        with open(file_path, "w") as handle:
+        with open(file_path, "w", encoding="utf8") as handle:
             self.dump(xml_handle, handle)
 
     def _iter_elements_by_name(self, handle, name, namespace):
