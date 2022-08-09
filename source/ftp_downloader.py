@@ -2,6 +2,7 @@ import logging
 from ftplib import FTP
 import re
 import os
+from tqdm import tqdm
 
 """
 Downloads the files through FTP
@@ -56,10 +57,18 @@ class FtpDownloader:
 
             ftp.cwd(self.ftp_path)
             file_names = ftp.nlst()
+            file_names = list(filter(lambda f: re_obj.match(f) is not None, file_names))
+            self.logger.info("Found {} files matching search criteria".format(len(file_names)))
 
-            for filename in filter(lambda f: re_obj.match(f) is not None, file_names):
-                self.logger.info("Downloading {} ..".format(filename))
-                yield self._download_file(ftp, filename, local_path)
+            for filename in tqdm(file_names):
+                try:
+                    self.logger.info("Downloading {} ..".format(filename))
+                    yield self._download_file(ftp, filename, local_path)
+                except Exception as E:
+                    self.logger.error("Could not download {} ..".format(filename))
+                    self.logger.error(E)
+                    self.logger.info("Continuing..")
+                    continue
 
 
         finally:
