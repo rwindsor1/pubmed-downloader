@@ -5,6 +5,6 @@
     "ftp_path": "/pubmed/baseline/"
   },
   "FtpDownloaderPostProcess": {
-    "num_workers": 1
+    "num_workers": 10
   }
 }
